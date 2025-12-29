@@ -11,7 +11,6 @@ export default defineConfig(() => {
     },
     server: {
       // Allow the app to be accessed via domain name during development (Vite middleware)
-      allowedHosts: true,
       host: true
     }
   }
