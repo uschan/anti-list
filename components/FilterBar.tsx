@@ -11,7 +11,7 @@ export const FilterBar: React.FC<Props> = ({ selectedCategory, onSelect, counts 
   const categories = ['All', ...Object.values(Category)];
 
   return (
-    <div className="flex flex-wrap gap-3 justify-center mb-10">
+    <div className="flex flex-wrap gap-3 justify-center mb-2">
       {categories.map((cat) => (
         <button
           key={cat}
