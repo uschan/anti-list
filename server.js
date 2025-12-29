@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from "@google/genai";
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -7,7 +6,6 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // --- CONSTANTS & DATA (Mirrored from frontend/constants.ts for Backend Logic) ---
-// Note: We duplicate this here to avoid complex TS compilation for the server file in this simple setup.
 const Category = {
   Investment: 'Investment',
   Business: 'Business',
@@ -107,21 +105,20 @@ const RULES = [
 
 async function createServer() {
   const app = express();
-  const PORT = 5173;
+  const PORT = process.env.PORT || 5173;
+  const isProduction = process.env.NODE_ENV === 'production';
 
   // Middleware
   app.use(express.json());
 
   // Initialize Gemini API
-  // NOTE: This runs on the server, so it uses the environment's API Key.
-  // The Client (browser) never sees this key.
   const apiKey = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     console.warn("WARNING: No API_KEY found in environment variables!");
   }
   const ai = new GoogleGenAI({ apiKey });
 
-  // --- API Routes ---
+  // --- API Routes (Available in both Dev and Prod) ---
 
   // 1. Decision Oracle API
   app.post('/api/oracle', async (req, res) => {
@@ -250,8 +247,6 @@ async function createServer() {
         CONTEXT: ${rulesContext}
       `;
 
-      // Reconstruct Chat Session
-      // We map the simplified history from frontend to Gemini format
       const chatHistory = history.map(msg => ({
         role: msg.role,
         parts: [{ text: msg.content }]
@@ -285,16 +280,31 @@ async function createServer() {
   });
 
 
-  // --- Vite Middleware (for Dev) or Static Serve (for Prod) ---
-  const vite = await createViteServer({
-    server: { middlewareMode: true },
-    appType: 'spa',
-  });
+  // --- FRONTEND SERVING LOGIC ---
+  if (!isProduction) {
+    // DEVELOPMENT MODE: Use Vite Middleware (Hot Reloading)
+    console.log("Starting in DEVELOPMENT mode (Vite Middleware)...");
+    const { createServer: createViteServer } = await import('vite');
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    // PRODUCTION MODE: Serve static files from 'dist'
+    console.log("Starting in PRODUCTION mode (Static Serve)...");
+    const distPath = path.join(__dirname, 'dist');
+    app.use(express.static(distPath));
 
-  app.use(vite.middlewares);
+    // Handle SPA Routing: Redirect all other requests to index.html
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Mode: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
   });
 }
 

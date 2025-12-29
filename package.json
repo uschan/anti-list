@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "start": "NODE_ENV=production node server.js",
+    "preview": "echo 'DO NOT USE PREVIEW. Use npm start instead.' && exit 1"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
