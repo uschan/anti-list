@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { RULES } from '../constants';
 import { Icon } from './Icon';
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface Message {
   role: 'user' | 'model';
@@ -23,59 +19,6 @@ export const AntiMentorChat: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const [chatSession, setChatSession] = useState<any>(null);
-
-  useEffect(() => {
-    // Initialize Chat Session with Advanced System Instruction
-    const rulesContext = RULES.map(r => `[Rule #${r.id}] ${r.title}: ${r.description}`).join('\n');
-    
-    const systemInstruction = `
-      You are the "Anti-Mentor". You are a fusion of a strict Librarian and a Stoic Philosopher.
-      
-      YOUR OBJECTIVE:
-      To protect the user from stupidity by strictly applying Duan Yongping's 80 Rules (The Anti-List) AND providing deep philosophical context.
-
-      LANGUAGE REQUIREMENT:
-      **ALL OUTPUT MUST BE IN CHINESE (Simplified).**
-
-      RESPONSE STRUCTURE (STRICTLY FOLLOW THIS):
-      
-      PART 1: THE LAW (The Citation)
-      - First, scan the provided context. Find the specific Rule(s) that apply to the user's query.
-      - You MUST quote the rule ID and Title explicitly.
-      - Format it like: "**Ref: Rule #X - [Title]**"
-      - If no specific rule applies, state "没有找到特定的协议，但一般的原则是……"
-
-      PART 2: THE VOID (The Insight)
-      - After citing the rule, explain the *essence* of why violating this is fatal.
-      - Do not just paraphrase the description. Go deeper. Use "Via Negativa" (Negative Way).
-      - Use metaphors (entropy, gravity, biology, warfare).
-      - Tell them what NOT to do. Never give positive "how-to" advice.
-      - Tone: Sharp, Cold, Profound.
-
-      EXAMPLE INTERACTION:
-      User: "I want to buy this stock because it dropped 50% and looks cheap."
-      Model:
-      **Ref: Rule #11 - 不因为“便宜”而买**
-      **Ref: Rule #28 - 不被股价波动吓跑**
-      
-      虚空（The Void）:
-      你混淆了“价格”与“价值”。仅仅因为今天的数字比昨天小就去买入，这不是投资，这是锚定效应的奴隶。一家下跌了50%的公司，依然可以再下跌100%。市场不欠你一个反弹。除非你比卖家更了解这门生意，否则你就是他们正在寻找的流动性。不要试图徒手接飞刀。
-      
-      CONTEXT (The Anti-List Axioms):
-      ${rulesContext}
-    `;
-
-    const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
-      }
-    });
-    setChatSession(chat);
-  }, []);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -85,7 +28,7 @@ export const AntiMentorChat: React.FC = () => {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || loading || !chatSession) return;
+    if (!input.trim() || loading) return;
 
     const userMsg = input;
     setInput('');
@@ -93,15 +36,33 @@ export const AntiMentorChat: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
 
     try {
-      const result = await chatSession.sendMessageStream({ message: userMsg });
+      // We send the current history (filtering out UI state) plus new message
+      // Note: In a real app, you might want to limit history length
+      const historyPayload = messages.map(m => ({ role: m.role, content: m.content }));
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg, history: historyPayload })
+      });
+
+      if (!response.ok) {
+        throw new Error("Connection failed");
+      }
       
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
       let fullResponse = "";
+      
       setMessages(prev => [...prev, { role: 'model', content: "", verdict: true }]);
 
-      for await (const chunk of result) {
-        const c = chunk as GenerateContentResponse;
-        if (c.text) {
-          fullResponse += c.text;
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          fullResponse += chunk;
+          
           setMessages(prev => {
             const newArr = [...prev];
             newArr[newArr.length - 1].content = fullResponse;
@@ -109,9 +70,14 @@ export const AntiMentorChat: React.FC = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: "错误：虚空沉默了。检查你的连接。", verdict: false }]);
+      const errorMsg = error instanceof Error ? error.message : "未知连接错误";
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        content: `⚠️ 系统错误: ${errorMsg}\n\n(服务器连接失败)`, 
+        verdict: false 
+      }]);
     } finally {
       setLoading(false);
     }
@@ -155,10 +121,10 @@ export const AntiMentorChat: React.FC = () => {
                   max-w-[85%] p-5 rounded-sm font-mono text-sm leading-7 relative shadow-lg whitespace-pre-line
                   ${msg.role === 'user' 
                     ? 'bg-white/10 text-white border border-white/20' 
-                    : 'bg-black text-gray-200 border-l-4 border-white pl-6 py-6'}
+                    : msg.content.includes('⚠️') ? 'bg-red-900/20 text-red-300 border-l-4 border-red-500 pl-6 py-6' : 'bg-black text-gray-200 border-l-4 border-white pl-6 py-6'}
                 `}
               >
-                {msg.role === 'model' && msg.verdict && (
+                {msg.role === 'model' && msg.verdict && !msg.content.includes('⚠️') && (
                    <div className="absolute -left-[24px] top-0 text-[10px] text-white/40 rotate-90 origin-top-left mt-4 select-none tracking-widest uppercase">
                      Verdict
                    </div>
