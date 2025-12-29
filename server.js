@@ -138,11 +138,49 @@ async function createServer() {
     console.log(` [SUCCESS] API Key Loaded: ${maskedKey}`);
     console.log("---------------------------------------------------\n");
   }
+
+  // --- CUSTOM FETCH TO FIX API KEY RESTRICTIONS ---
+  // The error "Requests from referer <empty> are blocked" implies the key has Website Restrictions.
+  // Node.js doesn't send Referer by default. We must inject it to trick the firewall.
+  const customFetch = (url, init) => {
+    const headers = new Headers(init?.headers);
+    // Try to satisfy the firewall. 
+    // If your key allows 'wildsalt.me', this works. 
+    // If your key allows 'localhost', we might need to change this.
+    // We set a valid URL to avoid the "<empty>" error.
+    if (!headers.has('Referer')) {
+        headers.set('Referer', 'https://wildsalt.me/');
+    }
+    return fetch(url, { ...init, headers });
+  };
   
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey, fetch: customFetch });
 
   // Use a stable, specific model name
   const MODEL_NAME = "gemini-3-flash-preview"; 
+
+  // Helper to handle 403 Errors specifically
+  const handleApiError = (error, res, context) => {
+    console.error(`${context} Error:`, error);
+    if (error.status === 403 || (error.response && error.response.status === 403)) {
+        console.error("\n################################################################");
+        console.error(" FATAL ERROR: GOOGLE API KEY PERMISSION DENIED");
+        console.error(" Reason: API_KEY_HTTP_REFERRER_BLOCKED");
+        console.error("################################################################");
+        console.error(" HOW TO FIX:");
+        console.error(" 1. Go to Google Cloud Console (https://console.cloud.google.com/apis/credentials)");
+        console.error(" 2. Find your API Key.");
+        console.error(" 3. Click 'Edit API key'.");
+        console.error(" 4. Under 'Application restrictions', select 'None'.");
+        console.error("    (Or select 'IP addresses' and add your server IP if static).");
+        console.error(" 5. DO NOT use 'Websites' restriction for a Backend/Node.js app.");
+        console.error("################################################################\n");
+        return res.status(403).json({ 
+            error: "API Key Configuration Error. Please check server logs for fix instructions." 
+        });
+    }
+    res.status(500).json({ error: error.message || "Internal Server Error" });
+  };
 
   // --- API Routes (Available in both Dev and Prod) ---
 
@@ -191,11 +229,7 @@ async function createServer() {
 
       res.json(JSON.parse(response.text));
     } catch (error) {
-      console.error("Oracle Error:", error);
-      if (error.response) {
-        console.error("API Response Details:", JSON.stringify(error.response, null, 2));
-      }
-      res.status(500).json({ error: error.message || "Internal Server Error" });
+        handleApiError(error, res, "Oracle");
     }
   });
 
@@ -257,8 +291,7 @@ async function createServer() {
 
       res.json(JSON.parse(response.text));
     } catch (error) {
-      console.error("Pre-Mortem Error:", error);
-      res.status(500).json({ error: error.message || "Internal Server Error" });
+        handleApiError(error, res, "Pre-Mortem");
     }
   });
 
@@ -306,8 +339,12 @@ async function createServer() {
       res.end();
 
     } catch (error) {
-      console.error("Chat Error:", error);
-      res.status(500).send("Error: " + error.message);
+       // Streaming errors are harder to send back as JSON, log them clearly
+       console.error("Chat Error:", error);
+       if (error.status === 403 || (error.response && error.response.status === 403)) {
+         console.error("FATAL: API KEY REFERER BLOCKED. SEE LOGS ABOVE.");
+       }
+       res.status(500).send("Error: " + error.message);
     }
   });
 
