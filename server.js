@@ -313,8 +313,9 @@ async function createServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`Mode: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`\n>>> Server running at http://localhost:${PORT}`);
+    console.log(`>>> Make sure your Nginx is proxying to port ${PORT}!`);
+    console.log(`>>> Example Nginx config created at: ./nginx_example.conf\n`);
   });
 }
 
