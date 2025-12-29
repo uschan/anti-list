@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { RULES } from '../constants';
 import { Icon } from './Icon';
+
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface OracleResult {
   verdict: 'APPROVED' | 'REJECTED' | 'WARNING';
@@ -28,28 +32,64 @@ export const DecisionOracle: React.FC = () => {
     setLogs(['> INITIALIZING_SCAN...', '> CONNECTING_TO_CORE_DB...']);
 
     try {
+      // 1. Prepare Context
+      const rulesContext = RULES.map(r => `ID:${r.id} [${r.category}] ${r.title}: ${r.description}`).join('\n');
+      
+      // 2. Define System Instruction & Prompt
+      const model = "gemini-2.5-flash";
+      const systemInstruction = `
+        You are the "Anti-List Validator". Your job is to strictly evaluate user decisions against Duan Yongping's 80 "Not-to-do" rules.
+        
+        Rules for you:
+        1. You are cynical, strict, and risk-averse.
+        2. If the user's input violates any of the 80 rules, your verdict must be 'REJECTED'.
+        3. If it risks violating a rule but isn't certain, return 'WARNING'.
+        4. Only return 'APPROVED' if it clearly avoids all the specific "Not-to-do" traps mentioned.
+        5. Your analysis should be brief, sharp, and direct (Cyberpunk style).
+        6. **IMPORTANT: Your response 'analysis' MUST be in CHINESE (Simplified).**
+        7. Return output in JSON format.
+      `;
+
       addLog('> UPLOADING_PAYLOAD...');
       
-      const response = await fetch('/api/oracle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input })
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: `
+          CONTEXT_RULES:
+          ${rulesContext}
+
+          USER_INPUT_SCENARIO:
+          "${input}"
+
+          Analyze this scenario. Did I violate any rules? Output in Chinese.
+        `,
+        config: {
+          systemInstruction: systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              verdict: { type: Type.STRING, enum: ['APPROVED', 'REJECTED', 'WARNING'] },
+              violatedRuleIds: { type: Type.ARRAY, items: { type: Type.INTEGER } },
+              analysis: { type: Type.STRING }
+            }
+          }
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Server Error: ${response.status} ${response.statusText}`);
+      addLog('> PROCESSING_NEURAL_RESPONSE...');
+      
+      if (response.text) {
+        const data = JSON.parse(response.text) as OracleResult;
+        setResult(data);
+        addLog(`> SCAN_COMPLETE: ${data.verdict}`);
+      } else {
+        throw new Error("No response from AI core");
       }
 
-      const data = await response.json();
-      
-      addLog('> PROCESSING_NEURAL_RESPONSE...');
-      setResult(data);
-      addLog(`> SCAN_COMPLETE: ${data.verdict}`);
-
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      const errorMsg = error instanceof Error ? error.message : "Network Error";
-      addLog(`> ERROR: ${errorMsg}`);
+      addLog('> ERROR: CONNECTION_LOST');
     } finally {
       setLoading(false);
     }
@@ -110,7 +150,7 @@ export const DecisionOracle: React.FC = () => {
             <div className="absolute top-2 right-2 text-[10px] text-white/20">SYS_LOGS</div>
             <div className="flex flex-col justify-end h-full gap-1">
               {logs.map((log, i) => (
-                <div key={i} className={`opacity-80 break-all ${log.includes('ERROR') ? 'text-red-500' : ''}`}>{log}</div>
+                <div key={i} className="opacity-80">{log}</div>
               ))}
               {loading && <div className="animate-pulse">_</div>}
             </div>

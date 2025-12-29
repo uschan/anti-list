@@ -30,7 +30,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
       </nav>
 
       {/* --- Hero Section --- */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-20 flex flex-col items-center text-center">
+      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32 flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-8 animate-fade-in">
           <Icon name="ShieldCheck" size={12} className="text-neon-blue" />
           <span className="text-[10px] font-mono tracking-widest uppercase text-gray-300">The Architecture of Survival</span>
@@ -41,7 +41,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
           的艺术。
         </h1>
         
-        <p className="max-w-2xl text-sm md:text-xl text-gray-400 mb-12 font-light leading-relaxed">
+        <p className="max-w-2xl text-lg md:text-xl text-gray-400 mb-12 font-light leading-relaxed">
           成功不在于变得更聪明，而在于始终“不犯蠢”。<br/>
           基于段永平 80 条商业与人生公理构建的 AI 决策辅助系统。
         </p>
@@ -111,7 +111,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
               <span className="text-neon-purple font-mono text-xs tracking-widest">CORE PHILOSOPHY</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-6 font-sans">基于“逆向思维”模型。</h2>
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            <p className="text-gray-400 text-lg mb-6 leading-relaxed">
               大多数系统试图教你“如何赢”，而这个系统教你“如何不输”。
               剔除错误、偏见和致命风险，成功将是唯一的剩余选项。
             </p>
@@ -146,7 +146,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
                   </div>
                   <Icon name="Quote" className="ml-auto text-white/20" size={32} />
                 </div>
-                <p className="text-sm font-light italic text-gray-300 leading-relaxed">
+                <p className="text-xl font-light italic text-gray-300 leading-relaxed">
                   "All I want to know is where I'm going to die, so I'll never go there."
                   (我只想知道我将来会死在哪里，这样我就永远不去那里。)
                 </p>
@@ -156,7 +156,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="font-mono text-xs text-neon-blue">SYSTEM_ORIGIN</div>
                 </div>
-                <p className="text-sm font-light text-gray-300 leading-relaxed">
+                <p className="text-lg font-light text-gray-300 leading-relaxed">
                   "Stop doing the wrong things, and the right things happen naturally."
                   (停止做错误的事情，正确的事情就会自然发生。)
                 </p>
@@ -167,7 +167,7 @@ export const LandingPage: React.FC<Props> = ({ onEnter }) => {
       </section>
 
       {/* --- Footer --- */}
-      <footer className="relative z-10 border-t border-white/10 bg-black py-6">
+      <footer className="relative z-10 border-t border-white/10 bg-black py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="flex flex-col">
              <span className="font-bold text-white tracking-tight">ANTI-LIST SYSTEM</span>

@@ -248,7 +248,7 @@ const App: React.FC = () => {
                 <span className="text-neon-purple font-mono text-xs tracking-widest">SYSTEM_ARCHITECTURE</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-sans">“不为”的底层逻辑</h2>
-              <p className="text-lg text-gray-400 leading-relaxed font-light">
+              <p className="text-xl text-gray-400 leading-relaxed font-light">
                 一个 <strong className="text-neon-blue font-normal">反脆弱框架</strong>，旨在最小化灾难性错误向量。
                 <br/>优化目标：通过负向选择实现生存。
               </p>
@@ -263,7 +263,7 @@ const App: React.FC = () => {
             <div className="relative overflow-hidden rounded-sm border border-neon-blue/30 bg-gradient-to-b from-cyber-gray to-black p-12 text-center">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-blue to-transparent opacity-50"></div>
               <h3 className="text-2xl font-bold mb-6 font-mono text-neon-blue">&lt;CORE_PHILOSOPHY /&gt;</h3>
-              <p className="text-gray-300 max-w-xl mx-auto mb-8 text-lg font-light italic">
+              <p className="text-gray-300 max-w-2xl mx-auto mb-8 text-xl font-light italic">
                 "It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent."
                 （令人惊讶的是，像我们这样的人通过试图保持“不犯蠢”，而不是试图变得非常聪明，获得了多少长期优势。）
               </p>
@@ -275,7 +275,7 @@ const App: React.FC = () => {
         {/* --- View: Inventory List --- */}
         {viewMode === 'list' && (
           <div className="animate-fade-in">
-            <div className="text-center mb-8">
+            <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-2 mb-4 opacity-70">
                  <span className="w-2 h-2 bg-neon-blue rounded-full animate-pulse"></span>
                  <span className="font-mono text-xs text-neon-blue tracking-widest">SYSTEM_ONLINE</span>
@@ -283,14 +283,14 @@ const App: React.FC = () => {
               <h2 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight font-sans">
                 VIA <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">NEGATIVA</span>
               </h2>
-              <p className="text-gray-400 max-w-xl mx-auto font-mono text-xs border-l-2 border-neon-blue/50 pl-4 text-left md:text-center md:border-l-0 md:pl-0">
+              <p className="text-gray-400 max-w-xl mx-auto font-mono text-sm border-l-2 border-neon-blue/50 pl-4 text-left md:text-center md:border-l-0 md:pl-0">
                 80 Protocols for Investment, Business, & Life.<br/>
                 执行命令: <span className="text-neon-blue">AVOID_FAILURE()</span>
               </p>
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col items-center gap-8 mb-8">
+            <div className="flex flex-col items-center gap-8 mb-16">
               <div className="relative w-full max-w-lg group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-neon-blue to-neon-purple rounded-sm opacity-20 group-hover:opacity-40 blur transition duration-500"></div>
                 <div className="relative flex items-center bg-cyber-black border border-white/20 rounded-sm overflow-hidden focus-within:border-neon-blue transition-colors">

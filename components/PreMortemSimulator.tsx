@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { RULES } from '../constants';
 import { Icon } from './Icon';
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface FatalMistake {
   ruleId: number;
@@ -46,19 +49,63 @@ export const PreMortemSimulator: React.FC = () => {
     setTypedLog('');
 
     try {
-      const response = await fetch('/api/pre-mortem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project })
+      const rulesContext = RULES.map(r => `ID:${r.id} ${r.title}: ${r.description}`).join('\n');
+      
+      const systemInstruction = `
+        You are a "Forensic Business Pathologist" from the year 2030. 
+        Your task is to analyze a FAILED project/idea provided by the user.
+        
+        PREMISE: The user's project has already failed catastrophically. It is dead.
+        GOAL: Determine the "Cause of Death" by mapping the failure back to Duan Yongping's 80 Rules (The Anti-List).
+        
+        INSTRUCTIONS:
+        1. Assume the project failed because the user IGNORED specific items on the Anti-List.
+        2. Identify 2-3 specific rules (by ID) that were likely violated based on the nature of the project.
+        3. "dateOfDeath": Generate a plausible future date (e.g., 2 years from now).
+        4. "causeOfDeath": A short, clinical, medical-sounding summary of the failure (e.g., "Acute Cash Flow Hemorrhage due to Ego Hypertrophy"). Translate to Chinese.
+        5. "autopsyLog": A cold, clinical narrative describing how the failure unfolded. Use medical or forensic metaphors. **MUST BE IN CHINESE (Simplified).**
+        6. "contribution": Explain the mistake in CHINESE.
+        7. Return JSON.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `
+          CONTEXT_RULES:
+          ${rulesContext}
+
+          SUBJECT_PROJECT (DECEASED):
+          "${project}"
+
+          Generate Autopsy Report. Output strictly in Chinese.
+        `,
+        config: {
+          systemInstruction: systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              dateOfDeath: { type: Type.STRING },
+              causeOfDeath: { type: Type.STRING },
+              fatalMistakes: { 
+                type: Type.ARRAY, 
+                items: { 
+                  type: Type.OBJECT,
+                  properties: {
+                    ruleId: { type: Type.INTEGER },
+                    contribution: { type: Type.STRING }
+                  }
+                } 
+              },
+              autopsyLog: { type: Type.STRING }
+            }
+          }
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Simulation Failed');
+      if (response.text) {
+        setReport(JSON.parse(response.text) as AutopsyReport);
       }
-
-      const data = await response.json();
-      setReport(data);
-
     } catch (error) {
       console.error(error);
     } finally {
