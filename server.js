@@ -105,8 +105,8 @@ const RULES = [
 
 async function createServer() {
   const app = express();
-  // Changed default port to 3000 to avoid conflicts with Vite preview/static servers
-  const PORT = process.env.PORT || 3000;
+  // Use port 3333 to avoid conflicts with 3000 (React default) and 5173 (Vite default)
+  const PORT = process.env.PORT || 3333;
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Middleware
