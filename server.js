@@ -105,11 +105,18 @@ const RULES = [
 
 async function createServer() {
   const app = express();
-  const PORT = process.env.PORT || 5173;
+  // Changed default port to 3000 to avoid conflicts with Vite preview/static servers
+  const PORT = process.env.PORT || 3000;
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Middleware
   app.use(express.json());
+
+  // DEBUGGING: Log all requests
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
+  });
 
   // Initialize Gemini API
   const apiKey = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
@@ -123,6 +130,7 @@ async function createServer() {
   // 1. Decision Oracle API
   app.post('/api/oracle', async (req, res) => {
     try {
+      console.log("Processing Oracle Request...");
       const { input } = req.body;
       const rulesContext = RULES.map(r => `ID:${r.id} [${r.category}] ${r.title}: ${r.description}`).join('\n');
       const systemInstruction = `
@@ -172,6 +180,7 @@ async function createServer() {
   // 2. Pre-Mortem API
   app.post('/api/pre-mortem', async (req, res) => {
     try {
+      console.log("Processing Pre-Mortem Request...");
       const { project } = req.body;
       const rulesContext = RULES.map(r => `ID:${r.id} ${r.title}: ${r.description}`).join('\n');
       const systemInstruction = `
@@ -234,6 +243,7 @@ async function createServer() {
   // 3. Chat API (Streaming)
   app.post('/api/chat', async (req, res) => {
     try {
+      console.log("Processing Chat Request...");
       const { message, history } = req.body;
       
       const rulesContext = RULES.map(r => `[Rule #${r.id}] ${r.title}: ${r.description}`).join('\n');
