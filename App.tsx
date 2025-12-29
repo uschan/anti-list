@@ -263,7 +263,7 @@ const App: React.FC = () => {
             <div className="relative overflow-hidden rounded-sm border border-neon-blue/30 bg-gradient-to-b from-cyber-gray to-black p-12 text-center">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-blue to-transparent opacity-50"></div>
               <h3 className="text-2xl font-bold mb-6 font-mono text-neon-blue">&lt;CORE_PHILOSOPHY /&gt;</h3>
-              <p className="text-gray-300 max-w-xl mx-auto mb-8 text-xl font-light italic">
+              <p className="text-gray-300 max-w-xl mx-auto mb-8 text-lg font-light italic">
                 "It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent."
                 （令人惊讶的是，像我们这样的人通过试图保持“不犯蠢”，而不是试图变得非常聪明，获得了多少长期优势。）
               </p>
@@ -283,7 +283,7 @@ const App: React.FC = () => {
               <h2 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight font-sans">
                 VIA <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">NEGATIVA</span>
               </h2>
-              <p className="text-gray-400 max-w-xl mx-auto font-mono text-sm border-l-2 border-neon-blue/50 pl-4 text-left md:text-center md:border-l-0 md:pl-0">
+              <p className="text-gray-400 max-w-xl mx-auto font-mono text-xs border-l-2 border-neon-blue/50 pl-4 text-left md:text-center md:border-l-0 md:pl-0">
                 80 Protocols for Investment, Business, & Life.<br/>
                 执行命令: <span className="text-neon-blue">AVOID_FAILURE()</span>
               </p>
