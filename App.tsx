@@ -16,6 +16,9 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Mobile Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Derived state
   const filteredRules = useMemo(() => {
@@ -50,6 +53,12 @@ const App: React.FC = () => {
     }
   };
 
+  // Helper to close menu and set view
+  const handleNavClick = (mode: ViewMode) => {
+    setViewMode(mode);
+    setIsMobileMenuOpen(false);
+  };
+
   // --- Render Landing Page ---
   if (showLanding) {
     return <LandingPage onEnter={() => setShowLanding(false)} />;
@@ -67,7 +76,7 @@ const App: React.FC = () => {
       {/* --- Header --- */}
       <header className="sticky top-0 z-40 bg-cyber-black/80 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-20 py-4 md:py-0 gap-4 md:gap-0">
+          <div className="flex flex-row justify-between items-center h-16 md:h-20">
             
             {/* Logo Area */}
             <div className="flex items-center space-x-4 cursor-pointer group" onClick={() => setShowLanding(true)}>
@@ -87,25 +96,25 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex items-center space-x-1 bg-white/5 p-1 rounded-sm border border-white/10 overflow-x-auto max-w-full">
+            {/* Desktop Navigation (Hidden on Mobile) */}
+            <nav className="hidden md:flex items-center space-x-1 bg-white/5 p-1 rounded-sm border border-white/10">
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => handleNavClick('list')}
                 className={`whitespace-nowrap px-4 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'list' ? 'bg-neon-blue text-black shadow-[0_0_10px_rgba(0,240,255,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
                 ./清单数据库
               </button>
               <button
-                onClick={() => setViewMode('system')}
+                onClick={() => handleNavClick('system')}
                 className={`whitespace-nowrap px-4 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'system' ? 'bg-neon-purple text-white shadow-[0_0_10px_rgba(112,0,255,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
                 ./系统分析
               </button>
               
-              <div className="w-px h-4 bg-white/10 mx-1 hidden md:block"></div>
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
 
               <button
-                onClick={() => setViewMode('oracle')}
+                onClick={() => handleNavClick('oracle')}
                 className={`whitespace-nowrap flex items-center gap-2 px-4 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'oracle' ? 'bg-neon-green text-black shadow-[0_0_10px_rgba(10,255,10,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
                 <span className="relative flex h-2 w-2">
@@ -115,34 +124,107 @@ const App: React.FC = () => {
                 决策神谕
               </button>
               <button
-                onClick={() => setViewMode('pre_mortem')}
+                onClick={() => handleNavClick('pre_mortem')}
                 className={`whitespace-nowrap flex items-center gap-2 px-4 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'pre_mortem' ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
                 <Icon name="Skull" size={12} />
                 事前验尸
               </button>
               <button
-                onClick={() => setViewMode('anti_mentor')}
+                onClick={() => handleNavClick('anti_mentor')}
                 className={`whitespace-nowrap flex items-center gap-2 px-4 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'anti_mentor' ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
                 <Icon name="MessageSquareX" size={12} />
                 反向导师
               </button>
 
-              <div className="w-px h-4 bg-white/10 mx-1 hidden md:block"></div>
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
 
               <button
-                onClick={() => setViewMode('guide')}
+                onClick={() => handleNavClick('guide')}
                 className={`whitespace-nowrap flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-medium rounded-sm transition-all ${viewMode === 'guide' ? 'bg-gray-700 text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                 title="使用指南"
               >
                 <Icon name="HelpCircle" size={14} />
               </button>
-
             </nav>
           </div>
         </div>
       </header>
+
+      {/* --- Mobile Floating Navigation Widget --- */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        
+        {/* Expanded Menu Items */}
+        {isMobileMenuOpen && (
+          <div className="flex flex-col gap-2 items-end animate-fade-in-up origin-bottom">
+            <button
+              onClick={() => handleNavClick('guide')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'guide' ? 'bg-gray-700 border-gray-500 text-white' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">使用指南</span>
+              <Icon name="HelpCircle" size={16} />
+            </button>
+
+            <button
+              onClick={() => handleNavClick('anti_mentor')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'anti_mentor' ? 'bg-white text-black border-white' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">反向导师</span>
+              <Icon name="MessageSquareX" size={16} />
+            </button>
+
+            <button
+              onClick={() => handleNavClick('pre_mortem')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'pre_mortem' ? 'bg-red-600 text-white border-red-500' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">事前验尸</span>
+              <Icon name="Skull" size={16} />
+            </button>
+
+            <button
+              onClick={() => handleNavClick('oracle')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'oracle' ? 'bg-neon-green text-black border-neon-green' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">决策神谕</span>
+               <span className="relative flex h-2 w-2">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75 ${viewMode === 'oracle' ? 'hidden' : 'block'}`}></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green"></span>
+                </span>
+            </button>
+
+            <button
+              onClick={() => handleNavClick('system')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'system' ? 'bg-neon-purple text-white border-neon-purple' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">系统分析</span>
+              <Icon name="Cpu" size={16} />
+            </button>
+
+            <button
+              onClick={() => handleNavClick('list')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-full backdrop-blur-md border shadow-lg transition-all ${viewMode === 'list' ? 'bg-neon-blue text-black border-neon-blue' : 'bg-cyber-black/90 border-white/10 text-gray-300'}`}
+            >
+              <span className="text-xs font-mono">清单数据库</span>
+              <Icon name="LayoutGrid" size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Toggle Button (FAB) */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={`
+            w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.3)] border transition-all duration-300
+            ${isMobileMenuOpen 
+              ? 'bg-white text-black border-white rotate-90' 
+              : 'bg-cyber-black/80 backdrop-blur-md border-neon-blue text-neon-blue'}
+          `}
+        >
+          <Icon name={isMobileMenuOpen ? 'X' : 'Menu'} size={24} />
+        </button>
+      </div>
+
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         

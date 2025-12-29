@@ -31,7 +31,9 @@ import {
   Cloud,
   Tent,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Menu,
+  X
 } from 'lucide-react';
 
 const icons: Record<string, React.FC<any>> = {
@@ -66,7 +68,9 @@ const icons: Record<string, React.FC<any>> = {
   Cloud,
   Tent,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Menu,
+  X
 };
 
 interface IconProps {
