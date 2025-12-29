@@ -120,16 +120,28 @@ async function createServer() {
   });
 
   // Initialize Gemini API
-  const apiKey = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
+  // PRIORITY: Check VITE_GEMINI_API_KEY first (as used in frontend .env), then API_KEY
+  const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+  
+  console.log("\n---------------------------------------------------");
+  console.log(" SYSTEM BOOT SEQUENCE");
+  console.log("---------------------------------------------------");
+  
   if (!apiKey) {
-    console.warn("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    console.warn("FATAL ERROR: No API_KEY found in environment variables!");
-    console.warn("Make sure you have a .env file with API_KEY=AIza...");
-    console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    console.warn(" [ERROR] NO API KEY FOUND!");
+    console.warn(" Please ensure your .env file exists and contains:");
+    console.warn(" VITE_GEMINI_API_KEY=AIzaSy...");
+    console.warn("---------------------------------------------------\n");
+  } else {
+    // Show masked key for verification
+    const maskedKey = apiKey.substring(0, 8) + "..." + apiKey.substring(apiKey.length - 4);
+    console.log(` [SUCCESS] API Key Loaded: ${maskedKey}`);
+    console.log("---------------------------------------------------\n");
   }
+  
   const ai = new GoogleGenAI({ apiKey });
 
-  // Use a stable, specific model name to avoid 500 errors from invalid model aliases
+  // Use a stable, specific model name
   const MODEL_NAME = "gemini-3-flash-preview"; 
 
   // --- API Routes (Available in both Dev and Prod) ---
@@ -180,7 +192,6 @@ async function createServer() {
       res.json(JSON.parse(response.text));
     } catch (error) {
       console.error("Oracle Error:", error);
-      // Log extended error details if available
       if (error.response) {
         console.error("API Response Details:", JSON.stringify(error.response, null, 2));
       }
