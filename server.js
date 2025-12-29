@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load .env file automatically
 import express from 'express';
 import { GoogleGenAI, Type } from "@google/genai";
 import { fileURLToPath } from 'url';
@@ -121,9 +122,15 @@ async function createServer() {
   // Initialize Gemini API
   const apiKey = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.warn("WARNING: No API_KEY found in environment variables!");
+    console.warn("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.warn("FATAL ERROR: No API_KEY found in environment variables!");
+    console.warn("Make sure you have a .env file with API_KEY=AIza...");
+    console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
   }
   const ai = new GoogleGenAI({ apiKey });
+
+  // Use a stable, specific model name to avoid 500 errors from invalid model aliases
+  const MODEL_NAME = "gemini-3-flash-preview"; 
 
   // --- API Routes (Available in both Dev and Prod) ---
 
@@ -146,7 +153,7 @@ async function createServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: MODEL_NAME,
         contents: `
           CONTEXT_RULES:
           ${rulesContext}
@@ -173,6 +180,10 @@ async function createServer() {
       res.json(JSON.parse(response.text));
     } catch (error) {
       console.error("Oracle Error:", error);
+      // Log extended error details if available
+      if (error.response) {
+        console.error("API Response Details:", JSON.stringify(error.response, null, 2));
+      }
       res.status(500).json({ error: error.message || "Internal Server Error" });
     }
   });
@@ -199,7 +210,7 @@ async function createServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: MODEL_NAME,
         contents: `
           CONTEXT_RULES:
           ${rulesContext}
@@ -263,7 +274,7 @@ async function createServer() {
       }));
 
       const chat = ai.chats.create({
-        model: "gemini-2.5-flash",
+        model: MODEL_NAME,
         history: chatHistory,
         config: {
           systemInstruction: systemInstruction,
